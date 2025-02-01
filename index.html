@@ -26,29 +26,43 @@
 
         button.addEventListener('click', () => {
             if (watchId) {
+                // Останавливаем передачу данных
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
                 button.textContent = 'Начать передачу';
                 statusEl.textContent = 'Ожидание...';
             } else {
                 if (navigator.geolocation) {
+                    // Запускаем отслеживание геолокации
                     watchId = navigator.geolocation.watchPosition(
                         (position) => {
                             const { latitude, longitude } = position.coords;
                             statusEl.textContent = `Широта: ${latitude}, Долгота: ${longitude}`;
 
-                            // Отправляем данные в бота (если нужно)
-                            fetch(`https://api.telegram.org/botТВОЙ_ТОКЕН/sendMessage`, {
+                            // Отправляем данные в бота через Telegram API
+                            fetch(`https://api.telegram.org/7343303497:AAHU46nIYtyX3y5Z_v0z1bqJ2PMo4-jrptM/sendMessage`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
                                     chat_id: tg.initDataUnsafe.user.id,
                                     text: `Геолокация: ${latitude}, ${longitude}`
                                 })
+                            }).catch(error => {
+                                console.error('Ошибка отправки данных в бот:', error);
+                                statusEl.textContent = 'Ошибка отправки данных в бот.';
                             });
                         },
                         (error) => {
-                            statusEl.textContent = `Ошибка: ${error.message}`;
+                            // Обработка ошибок
+                            if (error.code === error.PERMISSION_DENIED) {
+                                statusEl.textContent = 'Ошибка: Доступ к геолокации отклонен';
+                            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                                statusEl.textContent = 'Ошибка: Не удалось получить данные геолокации';
+                            } else if (error.code === error.TIMEOUT) {
+                                statusEl.textContent = 'Ошибка: Истекло время ожидания';
+                            } else {
+                                statusEl.textContent = `Ошибка: ${error.message}`;
+                            }
                         },
                         { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
                     );
