@@ -1,77 +1,68 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geo Tracker</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        button { padding: 10px 20px; font-size: 18px; margin-top: 20px; }
-        #status { margin-top: 20px; font-size: 16px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Mini App - Геолокация</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    #location {
+      font-size: 20px;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 20px;
+      width: 300px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h1>Геолокация</h1>
-    <button id="start">Начать передачу</button>
-    <p id="status">Ожидание...</p>
-    
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачивает Mini App
+  <h1>Геолокация в Telegram Mini App</h1>
+  <div id="location">Загрузка геолокации...</div>
 
-        let watchId = null;
-        const statusEl = document.getElementById('status');
-        const button = document.getElementById('start');
+  <script src="https://cdn.jsdelivr.net/npm/@telegram-apps/bridge@latest"></script>
+  <script>
+    // Функция для запроса геолокации
+    async function fetchLocation() {
+      const response = await request('web_app_check_location', 'location_checked');
+      
+      // Проверяем доступность и разрешение на доступ к геолокации
+      if (!response.available || !response.access_granted) {
+        document.getElementById('location').innerHTML = 'Геолокация не доступна или не разрешена.';
+        return;
+      }
+      
+      // Запрашиваем геолокацию
+      const location = await request('web_app_request_location', 'location_requested');
+      
+      // Отображаем геолокацию на экране
+      updateLocation(location);
+    }
 
-        button.addEventListener('click', () => {
-            if (watchId) {
-                // Останавливаем передачу данных
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-                button.textContent = 'Начать передачу';
-                statusEl.textContent = 'Ожидание...';
-            } else {
-                if (navigator.geolocation) {
-                    // Запускаем отслеживание геолокации
-                    watchId = navigator.geolocation.watchPosition(
-                        (position) => {
-                            const { latitude, longitude } = position.coords;
-                            statusEl.textContent = `Широта: ${latitude}, Долгота: ${longitude}`;
+    // Функция для обновления отображаемой геолокации
+    function updateLocation(location) {
+      const locationElement = document.getElementById('location');
+      if (locationElement) {
+        locationElement.innerHTML = `Широта: ${location.latitude}, Долгота: ${location.longitude}`;
+      }
+    }
 
-                            // Отправляем данные в бота через Telegram API
-                            fetch(`https://api.telegram.org/бот-токен/sendMessage`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    chat_id: tg.initDataUnsafe.user.id,
-                                    text: `Геолокация: ${latitude}, ${longitude}`
-                                })
-                            }).catch(error => {
-                                console.error('Ошибка отправки данных в бот:', error);
-                                statusEl.textContent = 'Ошибка отправки данных в бот.';
-                            });
-                        },
-                        (error) => {
-                            // Обработка ошибок
-                            if (error.code === error.PERMISSION_DENIED) {
-                                statusEl.textContent = 'Ошибка: Доступ к геолокации отклонен';
-                            } else if (error.code === error.POSITION_UNAVAILABLE) {
-                                statusEl.textContent = 'Ошибка: Не удалось получить данные геолокации';
-                            } else if (error.code === error.TIMEOUT) {
-                                statusEl.textContent = 'Ошибка: Истекло время ожидания';
-                            } else {
-                                statusEl.textContent = `Ошибка: ${error.message}`;
-                            }
-                        },
-                        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-                    );
-                    button.textContent = 'Остановить передачу';
-                } else {
-                    statusEl.textContent = 'Геолокация не поддерживается';
-                }
-            }
-        });
-    </script>
+    // Настроим обновление геолокации каждые 5 секунд
+    setInterval(fetchLocation, 5000);
+
+    // Первоначальный запрос геолокации
+    fetchLocation();
+  </script>
 </body>
 </html>
