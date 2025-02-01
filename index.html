@@ -40,7 +40,7 @@
                             statusEl.textContent = `Широта: ${latitude}, Долгота: ${longitude}`;
 
                             // Отправляем данные в бота через Telegram API
-                            fetch(`https://api.telegram.org/7343303497:AAHU46nIYtyX3y5Z_v0z1bqJ2PMo4-jrptM/sendMessage`, {
+                            fetch(`https://api.telegram.org/бот-токен/sendMessage`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
