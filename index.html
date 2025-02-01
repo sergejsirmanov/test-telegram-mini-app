@@ -17,10 +17,13 @@
     <p id="status">Ожидание...</p>
     
     <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачивает Mini App
+
         let watchId = null;
         const statusEl = document.getElementById('status');
         const button = document.getElementById('start');
-        
+
         button.addEventListener('click', () => {
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
@@ -33,6 +36,16 @@
                         (position) => {
                             const { latitude, longitude } = position.coords;
                             statusEl.textContent = `Широта: ${latitude}, Долгота: ${longitude}`;
+
+                            // Отправляем данные в бота (если нужно)
+                            fetch(`https://api.telegram.org/botТВОЙ_ТОКЕН/sendMessage`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    chat_id: tg.initDataUnsafe.user.id,
+                                    text: `Геолокация: ${latitude}, ${longitude}`
+                                })
+                            });
                         },
                         (error) => {
                             statusEl.textContent = `Ошибка: ${error.message}`;
