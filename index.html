@@ -1,68 +1,31 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telegram Mini App - Геолокация</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f4f4f4;
-    }
-    #location {
-      font-size: 20px;
-      padding: 20px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-top: 20px;
-      width: 300px;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test telegram-app</title>
 </head>
 <body>
-  <h1>Геолокация в Telegram Mini App</h1>
-  <div id="location">Загрузка геолокации...</div>
+    <h1 id="main-heading">Hello, world!</h1>
 
-  <script src="https://cdn.jsdelivr.net/npm/@telegram-apps/bridge@latest"></script>
-  <script>
-    // Функция для запроса геолокации
-    async function fetchLocation() {
-      const response = await request('web_app_check_location', 'location_checked');
-      
-      // Проверяем доступность и разрешение на доступ к геолокации
-      if (!response.available || !response.access_granted) {
-        document.getElementById('location').innerHTML = 'Геолокация не доступна или не разрешена.';
-        return;
-      }
-      
-      // Запрашиваем геолокацию
-      const location = await request('web_app_request_location', 'location_requested');
-      
-      // Отображаем геолокацию на экране
-      updateLocation(location);
-    }
+    <script src="https://cdn.jsdelivr.net/npm/@telegram-apps/bridge@latest"></script>
+    <script>
+        async function fetchUserData() {
+          try {
+            const user = await request('web_app_get_user', 'user_requested');
+            if (user) {
+              document.getElementById('main-heading').textContent = user.id || 'Не указано';
+            } else {
+                document.getElementById('main-heading').textContent = 'Не удалось получить данные пользователя';
+            }
+          } catch (error) {
+            console.error('Ошибка при получении данных пользователя:', error);
+            alert('Ошибка при получении данных пользователя');
+          }
+        }
 
-    // Функция для обновления отображаемой геолокации
-    function updateLocation(location) {
-      const locationElement = document.getElementById('location');
-      if (locationElement) {
-        locationElement.innerHTML = `Широта: ${location.latitude}, Долгота: ${location.longitude}`;
-      }
-    }
-
-    // Настроим обновление геолокации каждые 5 секунд
-    setInterval(fetchLocation, 5000);
-
-    // Первоначальный запрос геолокации
-    fetchLocation();
-  </script>
+        // Вызовем функцию для получения данных
+        fetchUserData();
+      </script>
 </body>
 </html>
